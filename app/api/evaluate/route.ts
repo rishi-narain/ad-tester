@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
 import { getPersonaById } from "@/lib/personas";
+import { BASE_SYSTEM_PROMPT } from "@/lib/system-prompt";
+import { getEvaluationPrompt } from "@/lib/prompts";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,53 +24,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build the evaluation prompt
-    const personaContext = `
-Persona: ${persona.name}
-Description: ${persona.description}
-
-Motivations:
-${persona.motivations.map((m) => `- ${m}`).join("\n")}
-
-Pain Points:
-${persona.painPoints.map((p) => `- ${p}`).join("\n")}
-
-Emotional Triggers:
-${persona.emotionalTriggers.map((t) => `- ${t}`).join("\n")}
-
-Buying Behavior:
-${persona.buyingBehavior}
-`;
-
-    const evaluationPrompt = `You are an expert marketing analyst specializing in ad resonance evaluation. Your task is to evaluate how well an ad will resonate with a specific target persona.
-
-${personaContext}
-
-Evaluate the following ad and provide a detailed analysis. Consider:
-1. How well the ad addresses the persona's motivations and pain points
-2. Whether it triggers the right emotional responses
-3. Alignment with their buying behavior
-4. Overall resonance and likelihood of engagement
-
-Ad Content:
-${contentType === "image" ? "[Image provided]" : content}
-
-Provide your evaluation in the following JSON format:
-{
-  "resonanceScore": <number between 0-100>,
-  "strengths": ["strength 1", "strength 2", "strength 3"],
-  "weaknesses": ["weakness 1", "weakness 2", "weakness 3"],
-  "suggestedFixes": ["fix 1", "fix 2", "fix 3"]
-}
-
-Be specific and actionable. Focus on what would make this persona respond positively or negatively to this ad.`;
+    // Build the evaluation prompt using the prompts module
+    const evaluationPrompt = getEvaluationPrompt(
+      persona,
+      content,
+      contentType as "text" | "image"
+    );
 
     // Prepare messages for OpenAI
     const messages: any[] = [
       {
         role: "system",
-        content:
-          "You are an expert marketing analyst. Always respond with valid JSON only, no additional text.",
+        content: BASE_SYSTEM_PROMPT,
       },
       {
         role: "user",
@@ -138,7 +105,7 @@ Be specific and actionable. Focus on what would make this persona respond positi
 
     return NextResponse.json({
       ...evaluationResult,
-      persona: persona.name,
+      persona: persona.title,
       personaId: persona.id,
     });
   } catch (error: any) {
