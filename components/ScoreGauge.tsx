@@ -42,30 +42,30 @@ export default function ScoreGauge({ score }: ScoreGaugeProps) {
     return "bg-green-500";
   };
 
-  const circumference = 2 * Math.PI * 90;
+  const circumference = 2 * Math.PI * 50;
   const offset = circumference - (displayScore / 100) * circumference;
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-64 h-64">
-        <svg className="transform -rotate-90 w-64 h-64">
+      <div className="relative w-32 h-32">
+        <svg className="transform -rotate-90 w-32 h-32">
           {/* Background circle */}
           <circle
-            cx="128"
-            cy="128"
-            r="90"
+            cx="64"
+            cy="64"
+            r="50"
             stroke="currentColor"
-            strokeWidth="16"
+            strokeWidth="10"
             fill="none"
             className="text-gray-200"
           />
           {/* Animated score circle */}
           <motion.circle
-            cx="128"
-            cy="128"
-            r="90"
+            cx="64"
+            cy="64"
+            r="50"
             stroke="currentColor"
-            strokeWidth="16"
+            strokeWidth="10"
             fill="none"
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -79,25 +79,14 @@ export default function ScoreGauge({ score }: ScoreGaugeProps) {
         {/* Score text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <motion.div
-            className={`text-6xl font-bold ${getScoreColor()}`}
+            className={`text-3xl font-bold ${getScoreColor()}`}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
           >
             {displayScore}
           </motion.div>
-          <div className="text-sm text-gray-500 mt-1">Resonance Score</div>
-        </div>
-      </div>
-      {/* Score indicator bar */}
-      <div className="w-full max-w-md mt-6">
-        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-          <motion.div
-            className={`h-full ${getScoreBgColor()}`}
-            initial={{ width: 0 }}
-            animate={{ width: `${displayScore}%` }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
-          />
+          <div className="text-xs text-gray-500 mt-0.5">Score</div>
         </div>
       </div>
     </div>
