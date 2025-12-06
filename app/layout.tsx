@@ -15,7 +15,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Ad Tester - Marketing Resonance Analyzer",
+  title: "Testbed.AI",
   description: "See how well your ad will resonate with specific audience personas before spending money on distribution",
 };
 

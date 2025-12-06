@@ -13,6 +13,7 @@ export default function Home() {
   const [imageData, setImageData] = useState<string | null>(null);
   const [textData, setTextData] = useState<string>("");
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
+  const [isReverseMode, setIsReverseMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -25,7 +26,7 @@ export default function Home() {
   };
 
   const handleEvaluate = async () => {
-    if (!selectedPersona) {
+    if (!isReverseMode && !selectedPersona) {
       alert("Please select a persona");
       return;
     }
@@ -49,9 +50,10 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          persona: selectedPersona.id,
+          persona: isReverseMode ? null : selectedPersona?.id,
           content: uploadMode === "image" ? imageData : textData,
           contentType: uploadMode,
+          reverseMode: isReverseMode,
         }),
       });
 
@@ -80,7 +82,7 @@ export default function Home() {
   };
 
   const canEvaluate =
-    selectedPersona &&
+    (isReverseMode || selectedPersona) &&
     ((uploadMode === "image" && imageData) ||
       (uploadMode === "text" && textData.trim()));
 
@@ -97,7 +99,7 @@ export default function Home() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <Sparkles className="text-cyan-500" size={32} />
             <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">
-              Ad Tester
+              Testbed.AI
             </h1>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -126,16 +128,41 @@ export default function Home() {
             />
           </div>
 
-          {/* Persona Selector */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              Select Target Persona
-            </h2>
-            <PersonaSelector
-              selectedPersona={selectedPersona}
-              onSelect={setSelectedPersona}
-            />
+          {/* Reverse Mode Toggle */}
+          <div className="mb-6">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isReverseMode}
+                onChange={(e) => {
+                  setIsReverseMode(e.target.checked);
+                  if (e.target.checked) {
+                    setSelectedPersona(null);
+                  }
+                }}
+                className="w-5 h-5 text-cyan-500 rounded focus:ring-cyan-500 focus:ring-2"
+              />
+              <span className="text-lg font-medium text-gray-900">
+                Reverse Audience Evaluation
+              </span>
+            </label>
+            <p className="text-sm text-gray-600 ml-8 mt-1">
+              Test your ad against all personas and find the best match
+            </p>
           </div>
+
+          {/* Persona Selector */}
+          {!isReverseMode && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                Select Target Persona
+              </h2>
+              <PersonaSelector
+                selectedPersona={selectedPersona}
+                onSelect={setSelectedPersona}
+              />
+            </div>
+          )}
 
           {/* Evaluate Button */}
           <motion.button
@@ -156,10 +183,10 @@ export default function Home() {
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 />
-                Evaluating...
+                {isReverseMode ? "Evaluating against all personas..." : "Evaluating..."}
               </span>
             ) : (
-              "Evaluate Ad"
+              isReverseMode ? "Find Best Match" : "Evaluate Ad"
             )}
           </motion.button>
         </motion.div>

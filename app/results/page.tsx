@@ -14,6 +14,9 @@ interface EvaluationResult {
   suggestedFixes: string[];
   persona: string;
   personaId: string;
+  reverseMode?: boolean;
+  bestMatch?: EvaluationResult;
+  allResults?: EvaluationResult[];
 }
 
 export default function ResultsPage() {
@@ -68,11 +71,19 @@ export default function ResultsPage() {
           </button>
           <div className="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-gray-200">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Evaluation Results
+              {result.reverseMode ? "Reverse Audience Evaluation" : "Evaluation Results"}
             </h1>
             <p className="text-gray-600">
-              Analysis for <span className="font-semibold">{result.persona}</span>{" "}
-              persona
+              {result.reverseMode ? (
+                <>
+                  Best match: <span className="font-semibold">{result.persona}</span> persona
+                </>
+              ) : (
+                <>
+                  Analysis for <span className="font-semibold">{result.persona}</span>{" "}
+                  persona
+                </>
+              )}
             </p>
           </div>
         </motion.div>
@@ -86,6 +97,66 @@ export default function ResultsPage() {
         >
           <ScoreGauge score={result.resonanceScore} />
         </motion.div>
+
+        {/* All Personas Comparison (Reverse Mode Only) */}
+        {result.reverseMode && result.allResults && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg p-6 mb-8 border border-gray-200"
+          >
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              All Persona Scores
+            </h2>
+            <div className="space-y-3">
+              {result.allResults
+                .sort((a, b) => b.resonanceScore - a.resonanceScore)
+                .map((personaResult, index) => (
+                  <div
+                    key={personaResult.personaId}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      personaResult.personaId === result.personaId
+                        ? "border-cyan-500 bg-cyan-50"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {personaResult.personaId === result.personaId && (
+                          <span className="text-cyan-600 font-bold">🏆</span>
+                        )}
+                        <span className="font-semibold text-gray-900">
+                          {personaResult.persona}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="w-32 bg-gray-200 rounded-full h-3 overflow-hidden">
+                          <div
+                            className={`h-full transition-all ${
+                              personaResult.personaId === result.personaId
+                                ? "bg-gradient-to-r from-cyan-500 to-indigo-500"
+                                : "bg-gray-400"
+                            }`}
+                            style={{ width: `${personaResult.resonanceScore}%` }}
+                          />
+                        </div>
+                        <span
+                          className={`font-bold text-lg min-w-[3rem] text-right ${
+                            personaResult.personaId === result.personaId
+                              ? "text-cyan-600"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {personaResult.resonanceScore}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Results Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
