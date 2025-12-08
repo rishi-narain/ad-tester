@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, RefreshCw, Link2, FileDown } from "lucide-react";
+import { ArrowLeft, RefreshCw, Link2, FileDown, TrendingUp } from "lucide-react";
 import ScoreGauge from "@/components/ScoreGauge";
 import ResultCard from "@/components/ResultCard";
 import jsPDF from "jspdf";
@@ -14,6 +14,7 @@ interface EvaluationResult {
   strengths: string[];
   weaknesses: string[];
   suggestedFixes: string[];
+  quote: string;
   persona: string;
   personaId: string;
   reverseMode?: boolean;
@@ -184,59 +185,63 @@ export default function ResultsPage() {
               <ArrowLeft size={16} />
               <span>Back</span>
             </button>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleShareLink}
-                disabled={isSharing}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-indigo-600 text-indigo-600 rounded-md text-sm font-medium hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSharing ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                    Sharing...
-                  </>
-                ) : (
-                  <>
-                    <Link2 size={14} />
-                    Share Link
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleDownloadPDF}
-                disabled={isGeneratingPDF}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-cyan-600 text-cyan-600 rounded-md text-sm font-medium hover:bg-cyan-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isGeneratingPDF ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <FileDown size={14} />
-                    PDF
-                  </>
-                )}
-              </button>
-            </div>
           </div>
           <div className="bg-white/80 backdrop-blur-lg rounded-lg shadow-md p-3 border border-gray-200">
-            <h1 className="text-xl font-bold text-gray-900 mb-1">
-              {result.reverseMode ? "Reverse Audience Evaluation" : "Evaluation Results"}
-            </h1>
-            <p className="text-sm text-gray-600">
-              {result.reverseMode ? (
-                <>
-                  Best match: <span className="font-semibold">{result.persona}</span> persona
-                </>
-              ) : (
-                <>
-                  Analysis for <span className="font-semibold">{result.persona}</span>{" "}
-                  persona
-                </>
-              )}
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 mb-1">
+                  {result.reverseMode ? "Reverse Audience Evaluation" : "Evaluation Results"}
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {result.reverseMode ? (
+                    <>
+                      Best match: <span className="font-semibold">{result.persona}</span> persona
+                    </>
+                  ) : (
+                    <>
+                      Analysis for <span className="font-semibold">{result.persona}</span>{" "}
+                      persona
+                    </>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleShareLink}
+                  disabled={isSharing}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-indigo-600 text-indigo-600 rounded-md text-sm font-medium hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSharing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                      Sharing...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 size={14} />
+                      Share Link
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isGeneratingPDF}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-cyan-600 text-cyan-600 rounded-md text-sm font-medium hover:bg-cyan-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGeneratingPDF ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <FileDown size={14} />
+                      PDF
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -245,9 +250,19 @@ export default function ResultsPage() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="bg-white/80 backdrop-blur-lg rounded-lg shadow-md p-4 mb-3 border border-gray-200 flex justify-center"
+          className="bg-white/80 backdrop-blur-lg rounded-lg shadow-md p-4 mb-3 border border-gray-200"
         >
-          <ScoreGauge score={result.resonanceScore} />
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+            <ScoreGauge score={result.resonanceScore} />
+            <div className="flex-1 max-w-md">
+              <p className="text-base text-gray-700 italic leading-relaxed mb-2">
+                "{result.quote}"
+              </p>
+              <p className="text-sm text-gray-500 text-right">
+                -- Synthetic Respondent
+              </p>
+            </div>
+          </div>
         </motion.div>
 
         {/* All Personas Comparison (Reverse Mode Only) */}
@@ -329,20 +344,29 @@ export default function ResultsPage() {
           />
         </div>
 
-        {/* Action Button */}
+        {/* Action Buttons */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
           className="text-center"
         >
-          <button
-            onClick={handleTryAnother}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-cyan-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105"
-          >
-            <RefreshCw size={16} />
-            Try Another Ad
-          </button>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={handleTryAnother}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-cyan-500 text-white rounded-md text-sm font-medium hover:shadow-md transition-all hover:scale-105"
+            >
+              <RefreshCw size={14} />
+              Test Another Concept
+            </button>
+            <button
+              onClick={() => router.push("/insights")}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white border border-indigo-600 text-indigo-600 rounded-md text-sm font-medium hover:bg-indigo-50 transition-all hover:scale-105"
+            >
+              <TrendingUp size={14} />
+              Dive Deeper
+            </button>
+          </div>
         </motion.div>
       </div>
     </div>

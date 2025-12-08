@@ -28,9 +28,10 @@ Provide your evaluation in the following JSON format:
   "resonanceScore": <number between 0-100>,
   "strengths": ["strength 1", "strength 2", "strength 3"],
   "weaknesses": ["weakness 1", "weakness 2", "weakness 3"],
-  "suggestedFixes": ["fix 1", "fix 2", "fix 3"]
+  "suggestedFixes": ["fix 1", "fix 2", "fix 3"],
+  "quote": "<a short, dryly funny quote from the synthetic respondent's perspective about this ad. Should be accurate to their reaction but with subtle humor. 1-2 sentences max.>"
 }
 
-Be specific and actionable. Focus on what would make this persona respond positively or negatively to this ad.`;
+Be specific and actionable. Focus on what would make this persona respond positively or negatively to this ad. The quote should sound like something this persona would actually say, but with a subtle, dry sense of humor.`;
 }
 

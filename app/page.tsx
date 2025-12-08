@@ -103,8 +103,7 @@ export default function Home() {
             </h1>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            See how well your ad will resonate with specific audience personas
-            before spending money on distribution
+            Instant AI Concept Testing
           </p>
         </motion.div>
 
@@ -113,13 +112,10 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-gray-200"
+          className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 border border-gray-200 max-w-2xl mx-auto"
         >
           {/* Upload Section */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              Upload Your Ad
-            </h2>
+          <div className="mb-6">
             <AdUploader
               mode={uploadMode}
               onModeChange={setUploadMode}
@@ -142,21 +138,15 @@ export default function Home() {
                 }}
                 className="w-5 h-5 text-cyan-500 rounded focus:ring-cyan-500 focus:ring-2"
               />
-              <span className="text-lg font-medium text-gray-900">
-                Reverse Audience Evaluation
+              <span className="text-base font-medium text-gray-900">
+                Find Your Audience - Test All
               </span>
             </label>
-            <p className="text-sm text-gray-600 ml-8 mt-1">
-              Test your ad against all personas and find the best match
-            </p>
           </div>
 
           {/* Persona Selector */}
           {!isReverseMode && (
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                Select Target Persona
-              </h2>
+            <div className="mb-6">
               <PersonaSelector
                 selectedPersona={selectedPersona}
                 onSelect={setSelectedPersona}
@@ -168,9 +158,9 @@ export default function Home() {
           <motion.button
             onClick={handleEvaluate}
             disabled={!canEvaluate || isLoading}
-            className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all ${
+            className={`w-full py-3 px-6 rounded-lg font-semibold text-base transition-all shadow-md ${
               canEvaluate && !isLoading
-                ? "bg-gradient-to-r from-indigo-600 to-cyan-500 text-white hover:shadow-lg hover:scale-[1.02]"
+                ? "bg-gradient-to-r from-indigo-600 to-cyan-500 text-white hover:shadow-xl hover:scale-[1.02]"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
             whileHover={canEvaluate && !isLoading ? { scale: 1.02 } : {}}
@@ -186,7 +176,7 @@ export default function Home() {
                 {isReverseMode ? "Evaluating against all personas..." : "Evaluating..."}
               </span>
             ) : (
-              isReverseMode ? "Find Best Match" : "Evaluate Ad"
+              isReverseMode ? "Find Best Match" : "Evaluate"
             )}
           </motion.button>
         </motion.div>
@@ -199,8 +189,9 @@ export default function Home() {
           className="mt-8 text-center text-sm text-gray-500"
         >
           <p>
-            Get instant feedback on ad resonance, strengths, weaknesses, and
-            actionable improvement suggestions
+            <a href="/terms" className="text-indigo-600 hover:text-indigo-700 underline">
+              Terms of Service
+            </a>
           </p>
         </motion.div>
       </div>

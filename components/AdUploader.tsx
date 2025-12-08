@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, DragEvent, ChangeEvent } from "react";
-import { Upload, X, FileText, Image as ImageIcon } from "lucide-react";
+import { Upload, X, FileText, Image as ImageIcon, Info } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface AdUploaderProps {
@@ -98,7 +98,7 @@ export default function AdUploader({
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => onModeChange("image")}
-          className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+          className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all relative ${
             mode === "image"
               ? "bg-cyan-500 text-white shadow-lg"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -106,7 +106,17 @@ export default function AdUploader({
         >
           <div className="flex items-center justify-center gap-2">
             <ImageIcon size={18} />
-            Image
+            Upload Your Concept
+            <div 
+              className="relative group"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Info size={16} className="text-current opacity-70 cursor-help" />
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                Max file size: 4MB. Supports JPG, PNG, GIF, WebP.
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+              </div>
+            </div>
           </div>
         </button>
         <button
@@ -131,7 +141,7 @@ export default function AdUploader({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`relative border-2 border-dashed rounded-xl p-8 transition-all ${
+          className={`relative border-2 border-dashed rounded-xl p-6 transition-all ${
             isDragging
               ? "border-cyan-500 bg-cyan-50"
               : "border-gray-300 bg-white hover:border-gray-400"
@@ -159,19 +169,25 @@ export default function AdUploader({
                   isDragging ? "text-cyan-500" : "text-gray-400"
                 }`}
               />
-              <p className="text-lg font-medium text-gray-700 mb-2">
-                Drag and drop your ad image here
-              </p>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <p className="text-lg font-medium text-gray-700">
+                  Drag & drop image here
+                </p>
+                <div className="relative group">
+                  <Info size={14} className="text-gray-500 cursor-help" />
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                    Max file size: 4MB. Supports JPG, PNG, GIF, WebP.
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
               <p className="text-sm text-gray-500 mb-4">or</p>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
               >
                 Browse Files
               </button>
-              <p className="text-xs text-gray-400 mt-4">
-                Max file size: 4MB. Supports JPG, PNG, GIF, WebP
-              </p>
             </div>
           )}
           <input
