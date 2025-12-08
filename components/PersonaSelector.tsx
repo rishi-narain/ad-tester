@@ -38,7 +38,7 @@ export default function PersonaSelector({
         className="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-left flex items-center justify-between"
       >
         <span className="text-gray-700 font-medium">
-          {selectedPersona ? selectedPersona.title : "Select Target Persona"}
+          {selectedPersona ? selectedPersona.title : "Select Persona"}
         </span>
         <ChevronDown
           size={20}

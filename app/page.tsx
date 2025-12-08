@@ -9,9 +9,10 @@ import PersonaSelector from "@/components/PersonaSelector";
 import { Persona } from "@/lib/personas";
 
 export default function Home() {
-  const [uploadMode, setUploadMode] = useState<"image" | "text">("image");
+  const [uploadMode, setUploadMode] = useState<"image" | "text" | "url">("image");
   const [imageData, setImageData] = useState<string | null>(null);
   const [textData, setTextData] = useState<string>("");
+  const [urlData, setUrlData] = useState<string>("");
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
   const [isReverseMode, setIsReverseMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +24,10 @@ export default function Home() {
 
   const handleTextUpload = (text: string) => {
     setTextData(text);
+  };
+
+  const handleUrlUpload = (url: string) => {
+    setUrlData(url);
   };
 
   const handleEvaluate = async () => {
@@ -41,6 +46,11 @@ export default function Home() {
       return;
     }
 
+    if (uploadMode === "url" && !urlData.trim()) {
+      alert("Please enter a web address");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -51,8 +61,8 @@ export default function Home() {
         },
         body: JSON.stringify({
           persona: isReverseMode ? null : selectedPersona?.id,
-          content: uploadMode === "image" ? imageData : textData,
-          contentType: uploadMode,
+          content: uploadMode === "image" ? imageData : uploadMode === "text" ? textData : urlData,
+          contentType: uploadMode === "url" ? "text" : uploadMode,
           reverseMode: isReverseMode,
         }),
       });
@@ -84,7 +94,8 @@ export default function Home() {
   const canEvaluate =
     (isReverseMode || selectedPersona) &&
     ((uploadMode === "image" && imageData) ||
-      (uploadMode === "text" && textData.trim()));
+      (uploadMode === "text" && textData.trim()) ||
+      (uploadMode === "url" && urlData.trim()));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
@@ -121,38 +132,40 @@ export default function Home() {
               onModeChange={setUploadMode}
               onImageUpload={handleImageUpload}
               onTextUpload={handleTextUpload}
+              onUrlUpload={handleUrlUpload}
             />
           </div>
 
-          {/* Reverse Mode Toggle */}
-          <div className="mb-6">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isReverseMode}
-                onChange={(e) => {
-                  setIsReverseMode(e.target.checked);
-                  if (e.target.checked) {
+          {/* Persona Selector and Reverse Mode Toggle */}
+          <div className="mb-6 flex items-center gap-4">
+            <div className="flex-1">
+              <button
+                onClick={() => {
+                  setIsReverseMode(!isReverseMode);
+                  if (!isReverseMode) {
                     setSelectedPersona(null);
                   }
                 }}
-                className="w-5 h-5 text-cyan-500 rounded focus:ring-cyan-500 focus:ring-2"
-              />
-              <span className="text-base font-medium text-gray-900">
-                Find Your Audience - Test All
-              </span>
-            </label>
-          </div>
-
-          {/* Persona Selector */}
-          {!isReverseMode && (
-            <div className="mb-6">
-              <PersonaSelector
-                selectedPersona={selectedPersona}
-                onSelect={setSelectedPersona}
-              />
+                className={`w-full px-4 py-2 bg-white border-2 rounded-lg hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-left flex items-center justify-between ${
+                  isReverseMode
+                    ? "border-cyan-500 bg-cyan-50"
+                    : "border-gray-300"
+                }`}
+              >
+                <span className="text-gray-700 font-medium">
+                  Find Audience
+                </span>
+              </button>
             </div>
-          )}
+            {!isReverseMode && (
+              <div className="flex-1">
+                <PersonaSelector
+                  selectedPersona={selectedPersona}
+                  onSelect={setSelectedPersona}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Evaluate Button */}
           <motion.button

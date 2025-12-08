@@ -3,9 +3,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, RefreshCw, Link2, FileDown, TrendingUp } from "lucide-react";
+import { ArrowLeft, RefreshCw, Link2, FileDown, TrendingUp, MessageSquare } from "lucide-react";
 import ScoreGauge from "@/components/ScoreGauge";
 import ResultCard from "@/components/ResultCard";
+import FeedbackModal from "@/components/FeedbackModal";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -26,6 +27,10 @@ export default function ResultsPage() {
   const [result, setResult] = useState<EvaluationResult | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackEmail, setFeedbackEmail] = useState("");
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const router = useRouter();
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -331,16 +336,22 @@ export default function ResultsPage() {
             title="Top Strengths"
             items={result.strengths}
             type="strengths"
+            evaluationId={`eval_${result.personaId}_${result.resonanceScore}`}
+            personaId={result.personaId}
           />
           <ResultCard
             title="Top Weaknesses"
             items={result.weaknesses}
             type="weaknesses"
+            evaluationId={`eval_${result.personaId}_${result.resonanceScore}`}
+            personaId={result.personaId}
           />
           <ResultCard
             title="Suggested Fixes"
             items={result.suggestedFixes}
             type="fixes"
+            evaluationId={`eval_${result.personaId}_${result.resonanceScore}`}
+            personaId={result.personaId}
           />
         </div>
 
@@ -366,8 +377,55 @@ export default function ResultsPage() {
               <TrendingUp size={14} />
               Dive Deeper
             </button>
+            <button
+              onClick={() => setShowFeedbackModal(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white border border-gray-600 text-gray-600 rounded-md text-sm font-medium hover:bg-gray-50 transition-all hover:scale-105"
+            >
+              <MessageSquare size={14} />
+              Feedback
+            </button>
           </div>
         </motion.div>
+
+        {/* Feedback Modal */}
+        {showFeedbackModal && (
+          <FeedbackModal
+            onClose={() => {
+              setShowFeedbackModal(false);
+              setFeedbackText("");
+              setFeedbackEmail("");
+            }}
+            onSubmit={async (feedback: string, email: string) => {
+              setIsSubmittingFeedback(true);
+              try {
+                await fetch("/api/feedback", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    type: "written",
+                    page: "results",
+                    data: {
+                      feedback,
+                      email,
+                    },
+                    evaluationId: `eval_${result?.personaId}_${result?.resonanceScore}`,
+                    personaId: result?.personaId,
+                  }),
+                });
+                setShowFeedbackModal(false);
+                setFeedbackText("");
+                setFeedbackEmail("");
+                alert("Thank you for your feedback!");
+              } catch (error) {
+                console.error("Error submitting feedback:", error);
+                alert("Failed to submit feedback. Please try again.");
+              } finally {
+                setIsSubmittingFeedback(false);
+              }
+            }}
+            isSubmitting={isSubmittingFeedback}
+          />
+        )}
       </div>
     </div>
   );

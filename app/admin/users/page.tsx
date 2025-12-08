@@ -127,6 +127,12 @@ export default function UsersPage() {
             >
               Settings
             </Link>
+            <Link
+              href="/admin/feedback"
+              className="flex-1 px-4 py-3 rounded-lg bg-gray-100 text-gray-700 font-medium text-center transition-all hover:bg-gray-200"
+            >
+              Feedback
+            </Link>
           </div>
         </motion.div>
 

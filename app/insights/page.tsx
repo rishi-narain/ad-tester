@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Lock, Unlock, Info, Link2, FileDown, RefreshCw } from "lucide-react";
+import { ArrowLeft, Lock, Unlock, Info, Link2, FileDown, RefreshCw, ThumbsUp, ThumbsDown } from "lucide-react";
+import FeedbackModal from "@/components/FeedbackModal";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -38,8 +39,48 @@ export default function InsightsPage() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [insightVotes, setInsightVotes] = useState<{ [key: string]: "up" | "down" | null }>({});
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackEmail, setFeedbackEmail] = useState("");
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const router = useRouter();
   const insightsRef = useRef<HTMLDivElement>(null);
+
+  const handleInsightVote = async (category: string, voteType: "up" | "down") => {
+    const newVote = insightVotes[category] === voteType ? null : voteType;
+    
+    setInsightVotes((prev) => {
+      if (newVote === null) {
+        const newVotes = { ...prev };
+        delete newVotes[category];
+        return newVotes;
+      }
+      return { ...prev, [category]: voteType };
+    });
+
+    // Send feedback to API
+    if (newVote !== null && result) {
+      try {
+        await fetch("/api/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "thumbs",
+            page: "insights",
+            data: {
+              category,
+              vote: voteType,
+            },
+            evaluationId: `eval_${result.personaId}_${result.resonanceScore}`,
+            personaId: result.personaId,
+          }),
+        });
+      } catch (error) {
+        console.error("Error sending feedback:", error);
+      }
+    }
+  };
 
   useEffect(() => {
     // Check for shared data in URL params first
@@ -326,11 +367,39 @@ export default function InsightsPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-white/80 backdrop-blur-lg rounded-lg shadow-md border border-gray-200 p-4 h-full flex flex-col"
+                className="bg-white/80 backdrop-blur-lg rounded-lg shadow-md border border-gray-200 p-4 h-full flex flex-col group"
               >
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                  {category}
-                </h3>
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    {category}
+                  </h3>
+                  {isUnlocked && (
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleInsightVote(category, "up")}
+                        className={`p-1 rounded transition-colors ${
+                          insightVotes[category] === "up"
+                            ? "bg-green-100 text-green-600"
+                            : "text-gray-400 hover:text-green-600 hover:bg-green-50"
+                        }`}
+                        title="Agree"
+                      >
+                        <ThumbsUp size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleInsightVote(category, "down")}
+                        className={`p-1 rounded transition-colors ${
+                          insightVotes[category] === "down"
+                            ? "bg-red-100 text-red-600"
+                            : "text-gray-400 hover:text-red-600 hover:bg-red-50"
+                        }`}
+                        title="Disagree"
+                      >
+                        <ThumbsDown size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <div className="relative flex-1 min-h-[140px]">
                   {!isUnlocked ? (
                     <>
@@ -721,21 +790,70 @@ export default function InsightsPage() {
           </div>
         </motion.div>
 
-        {/* Action Button */}
+        {/* Action Buttons */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
           className="text-center mt-3"
         >
-          <button
-            onClick={handleTryAnother}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-cyan-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105"
-          >
-            <RefreshCw size={16} />
-            Test Another Concept
-          </button>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={handleTryAnother}
+              className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-cyan-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105"
+            >
+              <RefreshCw size={16} />
+              Test Another Concept
+            </button>
+            <button
+              onClick={() => setShowFeedbackModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-2 bg-white border border-gray-600 text-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-all hover:scale-105"
+            >
+              <MessageSquare size={16} />
+              Feedback
+            </button>
+          </div>
         </motion.div>
+
+        {/* Feedback Modal */}
+        {showFeedbackModal && result && (
+          <FeedbackModal
+            onClose={() => {
+              setShowFeedbackModal(false);
+              setFeedbackText("");
+              setFeedbackEmail("");
+            }}
+            onSubmit={async (feedback: string, email: string) => {
+              setIsSubmittingFeedback(true);
+              try {
+                await fetch("/api/feedback", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    type: "written",
+                    page: "insights",
+                    data: {
+                      feedback,
+                      email,
+                    },
+                    evaluationId: `eval_${result.personaId}_${result.resonanceScore}`,
+                    personaId: result.personaId,
+                  }),
+                });
+                setShowFeedbackModal(false);
+                setFeedbackText("");
+                setFeedbackEmail("");
+                alert("Thank you for your feedback!");
+              } catch (error) {
+                console.error("Error submitting feedback:", error);
+                alert("Failed to submit feedback. Please try again.");
+              } finally {
+                setIsSubmittingFeedback(false);
+              }
+            }}
+            isSubmitting={isSubmittingFeedback}
+          />
+        )}
 
       </div>
     </div>
