@@ -77,7 +77,18 @@ async function evaluatePersona(
     const responseContent = completion.choices[0]?.message?.content;
     if (!responseContent) {
       console.error("OpenAI response structure:", JSON.stringify(completion, null, 2));
-      throw new Error("No response content from OpenAI. The API call succeeded but returned no content.");
+      
+      // Check if there's a finish_reason that explains why content is missing
+      const finishReason = completion.choices[0]?.finish_reason;
+      if (finishReason === "content_filter") {
+        throw new Error("Content was filtered by OpenAI's safety filters. Please try different content.");
+      } else if (finishReason === "length") {
+        throw new Error("Response was too long and got cut off. Please try with shorter content.");
+      } else if (finishReason) {
+        throw new Error(`OpenAI response incomplete. Reason: ${finishReason}`);
+      }
+      
+      throw new Error("No response content from OpenAI. The API call succeeded but returned no content. This may be a temporary issue - please try again.");
     }
 
     let evaluationResult;
