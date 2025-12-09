@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Lock, Unlock, Info, Link2, FileDown, RefreshCw, ThumbsUp, ThumbsDown } from "lucide-react";
+import { ArrowLeft, Lock, Unlock, Info, Link2, FileDown, RefreshCw, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
 import FeedbackModal from "@/components/FeedbackModal";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";

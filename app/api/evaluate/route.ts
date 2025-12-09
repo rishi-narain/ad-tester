@@ -3,6 +3,7 @@ import { openai } from "@/lib/openai";
 import { getPersonaById, personas } from "@/lib/personas";
 import { BASE_SYSTEM_PROMPT } from "@/lib/system-prompt";
 import { getEvaluationPrompt } from "@/lib/prompts";
+import { trackEvaluation } from "@/lib/analytics-store";
 
 async function evaluatePersona(
   persona: any,
@@ -151,6 +152,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { persona: personaId, content, contentType, reverseMode } = body;
+    
+    // Get user identifier (IP address or session ID)
+    const userId = request.headers.get("x-forwarded-for")?.split(",")[0] ||
+                   request.headers.get("x-real-ip") ||
+                   "anonymous";
 
     if (!content) {
       return NextResponse.json(
@@ -168,6 +174,16 @@ export async function POST(request: NextRequest) {
       // Find the persona with the highest score
       const bestMatch = results.reduce((best, current) =>
         current.resonanceScore > best.resonanceScore ? current : best
+      );
+
+      // Track the evaluation (now async)
+      await trackEvaluation(
+        bestMatch.personaId,
+        bestMatch.persona,
+        bestMatch.resonanceScore,
+        contentType === "url" ? "text" : contentType,
+        true,
+        userId
       );
 
       return NextResponse.json({
@@ -201,6 +217,17 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await evaluatePersona(persona, content, contentType);
+    
+    // Track the evaluation (now async)
+    await trackEvaluation(
+      result.personaId,
+      result.persona,
+      result.resonanceScore,
+      contentType === "url" ? "text" : contentType,
+      false,
+      userId
+    );
+    
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Error in evaluation API:", error);
@@ -213,4 +240,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

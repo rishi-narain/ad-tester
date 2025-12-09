@@ -1,26 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-
-interface Feedback {
-  id: string;
-  type: "thumbs" | "written";
-  timestamp: string;
-  page: "results" | "insights";
-  data: {
-    // For thumbs votes
-    category?: string;
-    item?: string;
-    vote?: "up" | "down";
-    // For written feedback
-    feedback?: string;
-    email?: string;
-  };
-  evaluationId?: string;
-  personaId?: string;
-}
-
-// In-memory storage - in production, use a database
-let feedbackStore: Feedback[] = [];
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,17 +14,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const feedback: Feedback = {
+    const feedback = {
       id: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type,
       timestamp: new Date().toISOString(),
       page,
-      data,
-      evaluationId,
-      personaId,
+      category: data.category || null,
+      item: data.item || null,
+      vote: data.vote || null,
+      feedback_text: data.feedback || null,
+      email: data.email || null,
+      evaluation_id: evaluationId || null,
+      persona_id: personaId || null,
     };
 
-    feedbackStore.push(feedback);
+    const { error } = await supabase.from("feedback").insert(feedback);
+
+    if (error) {
+      console.error("Error storing feedback:", error);
+      return NextResponse.json(
+        { error: "Failed to store feedback", message: error.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true, feedback }, { status: 201 });
   } catch (error: any) {
@@ -70,23 +62,44 @@ export async function GET(request: NextRequest) {
     const page = searchParams.get("page");
     const type = searchParams.get("type");
 
-    let filteredFeedback = feedbackStore;
+    let query = supabase.from("feedback").select("*");
 
     if (page) {
-      filteredFeedback = filteredFeedback.filter((f) => f.page === page);
+      query = query.eq("page", page);
     }
 
     if (type) {
-      filteredFeedback = filteredFeedback.filter((f) => f.type === type);
+      query = query.eq("type", type);
     }
 
-    // Sort by timestamp, newest first
-    filteredFeedback.sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    const { data, error } = await query.order("timestamp", { ascending: false });
 
-    return NextResponse.json({ feedback: filteredFeedback });
+    if (error) {
+      console.error("Error fetching feedback:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch feedback", message: error.message },
+        { status: 500 }
+      );
+    }
+
+    // Transform data back to original format for frontend compatibility
+    const feedback = (data || []).map((f) => ({
+      id: f.id,
+      type: f.type,
+      timestamp: f.timestamp,
+      page: f.page,
+      data: {
+        category: f.category,
+        item: f.item,
+        vote: f.vote,
+        feedback: f.feedback_text,
+        email: f.email,
+      },
+      evaluationId: f.evaluation_id,
+      personaId: f.persona_id,
+    }));
+
+    return NextResponse.json({ feedback });
   } catch (error: any) {
     console.error("Error fetching feedback:", error);
     return NextResponse.json(
@@ -95,4 +108,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

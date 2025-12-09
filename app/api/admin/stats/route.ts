@@ -1,50 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { personas } from "@/lib/personas";
 import { requireAdmin } from "@/lib/admin-auth";
-
-// Mock data - in production, this would come from a database
-const mockStats = {
-  totalEvaluations: 1247,
-  totalUsers: 342,
-  averageScore: 72.5,
-  evaluationsToday: 23,
-  evaluationsThisWeek: 156,
-  topPersona: "Busy Professional",
-  evaluationsByPersona: [
-    { persona: "Busy Professional", count: 312 },
-    { persona: "ADHD Achiever", count: 289 },
-    { persona: "Budget-Conscious Shopper", count: 245 },
-    { persona: "Fitness-Focused Millennial", count: 198 },
-    { persona: "New Parent", count: 112 },
-    { persona: "Early Tech Adopter", count: 91 },
-  ],
-  recentActivity: [
-    {
-      id: "1",
-      type: "evaluation",
-      timestamp: new Date().toISOString(),
-      details: "New evaluation completed for Busy Professional",
-    },
-    {
-      id: "2",
-      type: "user",
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      details: "New user registered",
-    },
-    {
-      id: "3",
-      type: "evaluation",
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
-      details: "Evaluation completed for ADHD Achiever",
-    },
-    {
-      id: "4",
-      type: "evaluation",
-      timestamp: new Date(Date.now() - 10800000).toISOString(),
-      details: "Reverse mode evaluation completed",
-    },
-  ],
-};
+import {
+  getTotalEvaluations,
+  getTotalUsers,
+  getAverageScore,
+  getEvaluationsToday,
+  getEvaluationsThisWeek,
+  getTopPersona,
+  getEvaluationsByPersona,
+  getRecentActivity,
+} from "@/lib/analytics-store";
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,9 +21,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // In production, fetch real data from database
-    // For now, return mock data
-    return NextResponse.json(mockStats);
+    // Fetch real data from analytics store (now async)
+    const [
+      totalEvaluations,
+      totalUsers,
+      averageScore,
+      evaluationsToday,
+      evaluationsThisWeek,
+      topPersona,
+      evaluationsByPersona,
+      recentActivity,
+    ] = await Promise.all([
+      getTotalEvaluations(),
+      getTotalUsers(),
+      getAverageScore(),
+      getEvaluationsToday(),
+      getEvaluationsThisWeek(),
+      getTopPersona(),
+      getEvaluationsByPersona(),
+      getRecentActivity(10),
+    ]);
+
+    const stats = {
+      totalEvaluations,
+      totalUsers,
+      averageScore,
+      evaluationsToday,
+      evaluationsThisWeek,
+      topPersona,
+      evaluationsByPersona,
+      recentActivity,
+    };
+
+    return NextResponse.json(stats);
   } catch (error: any) {
     console.error("Error fetching stats:", error);
     return NextResponse.json(
@@ -67,4 +62,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

@@ -1,27 +1,26 @@
 import { NextRequest } from "next/server";
 
 /**
- * Simple admin authentication check
- * In production, implement proper authentication (JWT, session, etc.)
+ * Admin authentication check
+ * Validates admin token from header or cookie
  */
 export function isAdmin(request: NextRequest): boolean {
   // Check for admin header or cookie
-  // In production, verify JWT token or session
   const adminToken = request.headers.get("x-admin-token");
   const adminCookie = request.cookies.get("admin-token");
 
-  // For development, allow access if ADMIN_TOKEN env var is set
-  // In production, implement proper authentication
-  if (process.env.NODE_ENV === "development") {
-    return true; // Allow in development
+  // Check against environment variable
+  const expectedToken = process.env.ADMIN_TOKEN;
+  
+  // If no ADMIN_TOKEN is set, deny access in production
+  if (!expectedToken) {
+    console.warn("ADMIN_TOKEN environment variable is not set");
+    return false;
   }
 
-  // Check against environment variable or session
-  const expectedToken = process.env.ADMIN_TOKEN;
   return (
     adminToken === expectedToken ||
-    adminCookie?.value === expectedToken ||
-    false
+    adminCookie?.value === expectedToken
   );
 }
 
@@ -34,4 +33,3 @@ export function requireAdmin(request: NextRequest): { authorized: boolean; error
   }
   return { authorized: true };
 }
-
